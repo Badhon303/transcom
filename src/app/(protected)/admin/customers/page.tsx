@@ -298,16 +298,37 @@ export default function CustomersAdminPage() {
                   className="input"
                 />
               </Field>
-              <Field label="Case Qty">
-                <input
-                  type="number"
-                  value={editing.caseQty ?? 0}
-                  onChange={(e) =>
-                    setEditing({ ...editing, caseQty: parseFloat(e.target.value) || 0 })
-                  }
-                  className="input"
-                />
-              </Field>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Case Qty">
+                  <input
+                    type="number"
+                    value={editing.caseQty ?? 0}
+                    onChange={(e) =>
+                      setEditing({ ...editing, caseQty: parseFloat(e.target.value) || 0 })
+                    }
+                    className="input"
+                  />
+                </Field>
+                <Field label="Assigned RBU">
+                  <select
+                    value={editing.assignedRbuId ?? ""}
+                    onChange={(e) =>
+                      setEditing({
+                        ...editing,
+                        assignedRbuId: e.target.value === "" ? null : e.target.value,
+                      })
+                    }
+                    className="input"
+                  >
+                    <option value="">— Unassigned —</option>
+                    {rbus.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.name}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Latitude">

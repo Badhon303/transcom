@@ -31,6 +31,22 @@ const RBUS = [
     isFactory: false,
   },
   {
+    name: "RBU — Bogura",
+    latitude: 24.88389843028668,
+    longitude: 89.35436961465572,
+    address: "Bogura",
+    capacityNotes: "Approximate — re-pin exact location in-app.",
+    isFactory: false,
+  },
+  {
+    name: "RBU — Coxbazar",
+    latitude: 21.43349651753353,
+    longitude: 92.03417264417608,
+    address: "Cox's Bazar",
+    capacityNotes: "Approximate — re-pin exact location in-app.",
+    isFactory: false,
+  },
+  {
     name: "BPCL Factory — Murapara, Rupganj",
     latitude: 23.79,
     longitude: 90.55,

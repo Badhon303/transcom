@@ -47,6 +47,7 @@ export async function PUT(
         caseQty: body.caseQty ?? before.caseQty,
         phase: body.phase ?? before.phase,
         auditDate: body.auditDate ?? before.auditDate,
+        assignedRbuId: body.assignedRbuId !== undefined ? body.assignedRbuId : before.assignedRbuId,
       },
     });
 

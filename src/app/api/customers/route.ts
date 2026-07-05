@@ -58,9 +58,10 @@ export async function POST(req: NextRequest) {
         caseQty: body.caseQty ?? 0,
         phase: body.phase ?? null,
         auditDate: body.auditDate ?? null,
+        assignedRbuId: body.assignedRbuId || null,
       },
     });
-    if (created.latitude != null && created.longitude != null) {
+    if (!body.assignedRbuId && created.latitude != null && created.longitude != null) {
       await recomputeAssignment(created.id);
     }
     const fresh = await prisma.customer.findUnique({ where: { id: created.id } });

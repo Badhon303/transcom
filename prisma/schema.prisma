@@ -1,0 +1,110 @@
+// Prisma schema for BPCL x Transcom PET reverse-logistics platform (Phase 1)
+// Datasource: PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Role values (SQLite has no enums): TRANSCOM_ADMIN | BPCL_ADMIN | VIEWER
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  password  String // bcrypt hash
+  role      String   @default("VIEWER")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Customer {
+  id             String   @id @default(uuid())
+  slNo           Int?
+  regionName     String
+  areaName       String?
+  seArea         String?
+  dbCode         String?
+  masterId       String?
+  dbName         String
+  proprietorName String?
+  mobilePhone    String?
+  latitude       Float?
+  longitude      Float?
+  address        String?
+  caseQty        Float    @default(0)
+  phase          String?
+  auditDate      String?
+  assignedRbuId  String?
+  assignedRbu    Rbu?     @relation(fields: [assignedRbuId], references: [id], onDelete: SetNull)
+  runStops       RunStop[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([regionName])
+  @@index([assignedRbuId])
+}
+
+model Rbu {
+  id            String     @id @default(uuid())
+  name          String
+  latitude      Float
+  longitude     Float
+  address       String?
+  capacityNotes String?
+  isFactory     Boolean    @default(false)
+  customers     Customer[]
+  runs          Run[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model Settings {
+  id                     String   @id @default("singleton")
+  lowVolumeThresholdCases Float   @default(300)
+  clusterRadiusKm        Float    @default(15)
+  updatedAt              DateTime @updatedAt
+}
+
+// Run.status values (SQLite has no enums): PLANNED | COMPLETED
+model Run {
+  id              String    @id @default(uuid())
+  rbuId           String
+  rbu             Rbu       @relation(fields: [rbuId], references: [id], onDelete: Cascade)
+  status          String    @default("PLANNED")
+  totalDistanceKm Float?
+  totalDurationMin Float?
+  stops           RunStop[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model RunStop {
+  id         String   @id @default(uuid())
+  runId      String
+  run        Run      @relation(fields: [runId], references: [id], onDelete: Cascade)
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  stopOrder  Int
+
+  @@unique([runId, customerId])
+  @@index([runId])
+}
+
+model DistanceCache {
+  id             String   @id @default(uuid())
+  fromId         String
+  fromType       String // CUSTOMER | RBU
+  toId           String
+  toType         String // RBU | FACTORY
+  straightLineKm Float
+  roadDistanceKm Float?
+  roadDurationMin Float?
+  computedAt     DateTime @default(now())
+
+  @@unique([fromId, fromType, toId, toType])
+  @@index([fromId, fromType])
+}

@@ -55,9 +55,9 @@ export default function PrintMapPage() {
   const [rbus, setRbus] = useState<Rbu[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [includeWhole, setIncludeWhole] = useState(true);
-  const [includeZones, setIncludeZones] = useState(true);
-  const [selectedRegions, setSelectedRegions] = useState<Set<string>>(new Set());
+  type Mode = "whole" | "zone";
+  const [mode, setMode] = useState<Mode>("whole");
+  const [selectedRegion, setSelectedRegion] = useState<string>("");
 
   useEffect(() => {
     Promise.all([
@@ -66,7 +66,8 @@ export default function PrintMapPage() {
     ]).then(([cs, rs]: [Customer[], Rbu[]]) => {
       setCustomers(cs);
       setRbus(rs);
-      setSelectedRegions(new Set(cs.map((c) => c.regionName)));
+      const sorted = Array.from(new Set(cs.map((c: Customer) => c.regionName))).sort();
+      if (sorted.length > 0) setSelectedRegion(sorted[0]);
       setLoading(false);
     });
   }, []);
@@ -87,16 +88,7 @@ export default function PrintMapPage() {
     return list;
   }
 
-  function toggleRegion(r: string) {
-    setSelectedRegions((prev) => {
-      const next = new Set(prev);
-      if (next.has(r)) next.delete(r);
-      else next.add(r);
-      return next;
-    });
-  }
-
-  const activeRegions = regions.filter((r) => selectedRegions.has(r));
+  const activeRegion = selectedRegion;
   const today = new Date().toLocaleDateString("en-GB", {
     day: "numeric",
     month: "long",
@@ -117,21 +109,23 @@ export default function PrintMapPage() {
       <div className="print:hidden bg-white border rounded-xl p-4 mb-6">
         <div className="flex flex-wrap items-center gap-4">
           <h1 className="text-lg font-bold text-slate-900">Print Map Report</h1>
-          <label className="flex items-center gap-1.5 text-sm">
+          <label className="flex items-center gap-1.5 text-sm cursor-pointer">
             <input
-              type="checkbox"
-              checked={includeWhole}
-              onChange={(e) => setIncludeWhole(e.target.checked)}
+              type="radio"
+              name="mapMode"
+              checked={mode === "whole"}
+              onChange={() => setMode("whole")}
             />
             Whole network
           </label>
-          <label className="flex items-center gap-1.5 text-sm">
+          <label className="flex items-center gap-1.5 text-sm cursor-pointer">
             <input
-              type="checkbox"
-              checked={includeZones}
-              onChange={(e) => setIncludeZones(e.target.checked)}
+              type="radio"
+              name="mapMode"
+              checked={mode === "zone"}
+              onChange={() => setMode("zone")}
             />
-            Zone-wise maps
+            Zone-wise map
           </label>
           <button
             onClick={() => window.print()}
@@ -140,22 +134,23 @@ export default function PrintMapPage() {
             🖨 Print / Save as PDF
           </button>
         </div>
-        {includeZones && (
+        {mode === "zone" && (
           <div className="mt-3 flex flex-wrap gap-2">
             {regions.map((r) => (
               <label
                 key={r}
                 className={`flex items-center gap-1.5 text-xs border rounded-full px-3 py-1 cursor-pointer ${
-                  selectedRegions.has(r)
+                  selectedRegion === r
                     ? "bg-brand/10 border-brand text-brand"
-                    : "text-slate-500"
+                    : "text-slate-500 hover:border-slate-400"
                 }`}
               >
                 <input
-                  type="checkbox"
+                  type="radio"
+                  name="zone"
                   className="hidden"
-                  checked={selectedRegions.has(r)}
-                  onChange={() => toggleRegion(r)}
+                  checked={selectedRegion === r}
+                  onChange={() => setSelectedRegion(r)}
                 />
                 {r}
               </label>
@@ -169,7 +164,7 @@ export default function PrintMapPage() {
       </div>
 
       {/* Whole network */}
-      {includeWhole && (
+      {mode === "whole" && (
         <section className="print-section bg-white border rounded-xl print:border-0 print:rounded-none overflow-hidden mb-8">
           <div className="px-4 py-3 border-b">
             <div className="flex items-baseline justify-between flex-wrap gap-2">
@@ -192,35 +187,31 @@ export default function PrintMapPage() {
       )}
 
       {/* Zone-wise */}
-      {includeZones &&
-        activeRegions.map((region) => {
-          const zoneCustomers = customers.filter((c) => c.regionName === region);
-          const zRbus = zoneRbus(zoneCustomers);
-          return (
-            <section
-              key={region}
-              className="print-section bg-white border rounded-xl print:border-0 print:rounded-none overflow-hidden mb-8"
-            >
-              <div className="px-4 py-3 border-b">
-                <div className="flex items-baseline justify-between flex-wrap gap-2">
-                  <h2 className="text-base font-bold text-slate-900">
-                    Zone: {region}
-                  </h2>
-                  <span className="text-xs text-slate-400">
-                    BPCL × Transcom · {today}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between flex-wrap gap-2 mt-1">
-                  <SectionStats customers={zoneCustomers} rbus={zRbus} />
-                  <Legend />
-                </div>
+      {mode === "zone" && activeRegion && (() => {
+        const zoneCustomers = customers.filter((c) => c.regionName === activeRegion);
+        const zRbus = zoneRbus(zoneCustomers);
+        return (
+          <section className="print-section bg-white border rounded-xl print:border-0 print:rounded-none overflow-hidden mb-8">
+            <div className="px-4 py-3 border-b">
+              <div className="flex items-baseline justify-between flex-wrap gap-2">
+                <h2 className="text-base font-bold text-slate-900">
+                  Zone: {activeRegion}
+                </h2>
+                <span className="text-xs text-slate-400">
+                  BPCL × Transcom · {today}
+                </span>
               </div>
-              <div className="print-map h-[600px]">
-                <NetworkMap customers={zoneCustomers} rbus={zRbus} fitData />
+              <div className="flex items-center justify-between flex-wrap gap-2 mt-1">
+                <SectionStats customers={zoneCustomers} rbus={zRbus} />
+                <Legend />
               </div>
-            </section>
-          );
-        })}
+            </div>
+            <div className="print-map h-[600px]">
+              <NetworkMap customers={zoneCustomers} rbus={zRbus} fitData />
+            </div>
+          </section>
+        );
+      })()}
     </div>
   );
 }

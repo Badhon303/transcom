@@ -133,6 +133,12 @@ export default function DashboardPage() {
           <span className="text-slate-500">
             Showing <strong>{filtered.length}</strong> of {customers.length}
           </span>
+          <a
+            href="/dashboard/print"
+            className="border border-slate-300 text-slate-600 px-2 py-1 rounded hover:bg-slate-100 text-xs"
+          >
+            🖨 Print map
+          </a>
           <div className="ml-auto flex items-center gap-3 text-xs text-slate-500">
             <span className="flex items-center gap-1">
               <span className="inline-block w-3 h-3 rounded-full bg-blue-500" />

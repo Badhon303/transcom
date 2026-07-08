@@ -19,3 +19,39 @@ body {
   background: transparent;
   border: none;
 }
+
+/* Print map report */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+  header {
+    display: none !important;
+  }
+  body {
+    background: white;
+  }
+  .print-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    break-after: page;
+    page-break-after: always;
+    margin-bottom: 0 !important;
+    box-shadow: none !important;
+  }
+  .print-section:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+  .print-map {
+    height: 150mm !important;
+  }
+  .leaflet-control-container {
+    display: none !important;
+  }
+  .leaflet-container {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
